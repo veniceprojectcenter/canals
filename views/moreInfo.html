@@ -1,0 +1,54 @@
+<div class="more-info" style="background-color: #000; color: #fff; height: 100%;">
+	<div class="more-info-header">
+		<span ng-click="backToMap()" class="back-button">
+			<span class="icon-arrow-left"/>
+		</span>
+		<span class="more-info-title no-select" ck-title item="item" form="mainForm"></span>
+	</div>
+	<div>
+		<div class="main-info">
+			<div class="photo-container">
+				<div class="streetview-wrapper" ng-show="!hasImage && item && item.birth_certificate.lat && item.birth_certificate.lon">
+					<div ck-streetview class="streetview-panorama" birth-certificate="item.birth_certificate"></div>
+				</div>
+				<div class="photo-frame" ng-show="!hasImage && (!item.birth_certificate.lat || !item.birth_certificate.lon)">
+					<div class="no-select photo-missing">
+						<div>
+							<div class="icon-camera" style="font-size:40px;"/>
+							<div>missing</div>
+						</div>
+					</div>
+				</div>
+				<div class="photo-frame" ng-show="hasImage">
+					<img src="tmp.jpg" class="photo" />
+				</div>
+			</div>
+			<div class="main-info-property-container">
+				<div ng-repeat="(fieldId, value) in item | displayForm:mainForm" ng-show="value">
+					<span class="key">{{fieldId}}</span>
+					<span class="value">{{value}}</span>
+				</div>
+			</div>
+		</div>
+		<div class="subgroups">
+			<table ng-repeat="subgroupItem in item | subgroupItems:mainForm" class="subgroup">
+				<tr class="subgroup-top no-select" ng-click="toggleVisibleSubgroup($index)">
+					<td class="subgroup-left subgroup-icon" style="background:{{colorFromType(subgroupItem)}}">
+						<span ng-class="iconClassFromType(subgroupItem)"/>
+					</td>
+					<td class="subgroup-header subgroup-right" ck-title item="subgroupItem" form="formFromType(subgroupItem)"></td>
+					<td><span ng-class="{ 'icon-arrow-right': visibleSubgroup != $index, 'icon-arrow-down': visibleSubgroup == $index }" class="subgroup-expand-icon" /></td>
+				</tr>
+				<tr class="subgroup-bottom" ng-show="visibleSubgroup == $index">
+					<td class="subgroup-left" style="background:{{colorFromType(subgroupItem)}}"></td>
+					<td class="subgroup-right subgroup-property-container" colspan="2">
+						<div ng-repeat="(key, value) in subgroupItem | displayForm:formFromType(subgroupItem)" class="subgroup-property" ng-show="value">
+							<span class="key">{{key}}</span>
+							<span class="value">{{value}}</span>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>

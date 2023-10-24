@@ -1,0 +1,25 @@
+<div class="header-vpc dark-mode">
+  <span 
+    class="button dark-mode text-header-vpc my_link" 
+    style="grid-area: how; margin-left: 15px;"
+    ng-click="toAbout()">
+    How it works
+  </span>
+  <span class="dark-mode text-header-vpc" style="grid-area: title; text-align: center;font-weight: bold;">
+    Canals
+  </span>
+  <a class="header-visit-vpc my_link" href="https://veniceprojectcenter.org" target="_blank">
+    <span class="text-header-vpc">Visit VPC</span>
+  </a>
+</div>
+<div style="position:absolute;width:100%;height:calc(100% - 61px);">
+	<div id="map-canvas" style="width:100%;height:100%;"></div>
+</div>
+<div style="position:absolute;top:0px;left:0px;width:100%;height:100%;z-index:2000;" id="loadingPanel">
+	<div style="margin-left:auto;margin-right:auto;text-align:center;margin-top:50px;" id="loadingText" class="no-select"><h3 style="color:white;">Loading...</h3></div>
+	<div style="position:absolute;left:50%;top:50%;" id="spinner"/>
+</div>
+<div ng-click="hideAbout()" style="position:absolute;top:0px;left:0px;width:100%;height:100%;z-index:2000;background-color:rgba(0,0,0,0.5);" id="aboutPanel">
+	<iframe class="info" style="position: absolute;top: 50%;left: 50%;margin-top: -350px;margin-left: -450px;height: 700px;width:900px;overflow:auto;padding:5px" id="about" src="https://docs.google.com/document/d/1qVVVzuJr16GjiAX7P89fooW_Yl9qsplhT4Dm3SwDt58/pub?embedded=true">
+	</iframe>
+</div>

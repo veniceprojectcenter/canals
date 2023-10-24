@@ -1,0 +1,145 @@
+<div style="height:100%; background-color: #000;">
+  <div class="header-vpc dark-mode">
+    <span 
+      class="button dark-mode text-header-vpc my_link" 
+      style="grid-area: how; margin-left: 15px;"
+      ng-click="toAbout()">
+      How it works
+    </span>
+    <span class="dark-mode text-header-vpc" style="grid-area: title; text-align: center;font-weight: bold;">
+      Canals
+    </span>
+    <a class="header-visit-vpc my_link" href="https://veniceprojectcenter.org" target="_blank">
+      <span class="text-header-vpc">Visit VPC</span>
+    </a>
+  </div>
+
+  <div class="title">
+    <h1>HOW IT WORKS</h1> 
+  </div>
+
+  <div class="container_about">
+
+    <div class="img_container">
+      <img src="/guida.png">
+    </div>
+
+    <div class="text_container">
+      <p>
+        This application displays the canals (blue), canal segments (green) and bridges (red) of the City of Venice.  The maps display the location and size, as well as information, on each canal, segment and bridge. 
+      </p>
+      <h2>Zoom</h2>
+      <p>
+        Click the PLUS/MINUS on the top-left button to zoom in or out on the map.
+      </p>
+    
+      <h2>Layers</h2>
+      <p>
+        Click LAYERS in the top right to select what infrastructure appears on the map.
+      </p>
+      <p>
+        Choose CANAL SEGMENTS to see a map with selectable segment, CANALS to see a map with selectable canals, and BRIDGES to see a map with selectable bridges.
+      </p>
+    
+      <h2>Info popup</h2>
+      <p>
+        Click on an infrastructure element to see information specific to that canal, segment, or bridge.
+      </p>
+    
+      <h2>More info</h2>
+      <p>
+        Select MORE INFO to see detailed information on the infrastructure element you have selected.
+      </p>
+    
+      <h2>Credits</h2>
+      <p>
+        This visualization was produced in 2013 by the WPI Venice Project Center Canals Team: Mitchell Wills (Programmer), Dominick Bossalini, Brian Gardner and Tyler Mathews.  
+      </p>
+    </div>
+  </div>
+  <div class="back">
+    <a class="guida" rel="nofollow" href="/">
+      <span ng-click="backToMap()">Back to the App</span>
+    </a>
+  </div>
+</div>
+
+<style type="text/css">
+.container_about{
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-template-areas: 'img text';
+  margin-left: 15px;
+  margin-right: 15px;
+  place-self: center;
+}
+
+.img_container{
+  grid-area: img;
+  place-self: center;
+}
+.img_container img{
+  width: 95%;
+}
+
+.text_container{
+  grid-area: text;
+  place-self: center;
+}
+.text_container h2{
+  margin-top: 10px;
+  margin-bottom: 10px;
+  color: #fff;
+}
+.text_container  p{
+  margin: 0;
+  color: #fff;
+}
+
+.title h1{
+  text-align: center;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  color:#fff;
+}
+
+.guida{
+  margin-top: 15px;
+  border: solid 1px #ffffff;
+  background: transparent;
+  border-radius: 50px;
+  padding: .7em 2.4em;
+  cursor: pointer;
+  transition: .3s ease-in-out;
+  min-width: 120px;
+  display: inline-grid;
+  max-height: 30px;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+
+.guida span{
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 16px;
+  letter-spacing: .05em;
+  transition: .3s ease-in-out;
+  margin: 0 !important;
+  place-self: center;
+}
+
+.guida::hover {
+  animation: shinehover 2s infinite ease-in-out;
+  transition: .3s;
+}
+
+.guida::hover span{
+  transition: .3s ease-in-out;
+}
+
+.back{
+  text-align: center;
+  margin-top: 30px;
+}
+</style>

@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en" ng-app="hydroapp">
+	<head>
+		<title>Venice Tide Levels</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+		
+		<link rel="stylesheet" type="text/css" href="css/reset.css"/>
+		
+		
+		<!-- Firebase -->
+		<script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+		
+		<!-- jquery -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		
+		<!-- Leaflet -->
+		<script src="https://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+		<link rel="stylesheet" href="https://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+		
+		<!-- bootstrap -->
+		<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+		<link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css"/>
+		<script type='text/javascript' src='js/bootstrap.min.js'></script>
+		
+		<!-- angularjs -->
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
+		
+		<!-- angular slider -->
+		<link rel="stylesheet" type="text/css" href="css/angular-slider.min.css"/>
+		<script type='text/javascript' src='js/angular-slider.min.js'></script>
+		
+		<!-- spinner -->
+		<script type='text/javascript' src='js/spin.min.js'></script>
+		<script type='text/javascript' src='js/jquery.spin.js'></script>
+		
+		<!-- local css -->
+		<link rel="stylesheet" type="text/css" href="css/main.css"/>
+		
+		<!-- chroma.js -->
+		<script type='text/javascript' src='js/chroma.min.js'></script>
+		
+		<!-- ArrowLine library -->
+		<script type='text/javascript' src='js/ArrowLine.js'></script>
+		
+		
+		<style type="text/css">
+			/* fix for slider conflict with bootstrap */
+			slider span{
+				-webkit-box-sizing: content-box !important;
+				-moz-box-sizing: content-box !important;
+				box-sizing: content-box !important;
+			}
+			
+			.info {
+				padding: 10px 10px;
+				font: 14px/16px Arial, Helvetica, sans-serif;
+				background: white;
+				background: rgba(255,255,255,0.9);
+				box-shadow: 0 0 15px rgba(0,0,0,0.2);
+				border-radius: 5px;
+			}
+			.info-width {
+				width: 500px;
+			}
+			.info h4 {
+				margin: 0 0 5px;
+				color: #777;
+			}
+		</style>
+		<script type='text/javascript'>
+			var map;
+			var baseLayer;
+			
+			$( document ).ready(function() {
+				map = L.map("map-canvas", {minZoom: 12}).setView([45.4375 , 12.334], 15);
+				baseLayer = new L.TileLayer(
+					'http://{s}.tiles.mapbox.com/v3/bennlich.map-8ds9rdrc/{z}/{x}/{y}.png',
+					{ attribution: 'Map tiles © MapBox' }
+				).addTo(map);
+				L.control.scale().addTo(map);
+			});
+			
+			app = angular.module('hydroapp', ['uiSlider']);
+			app.controller('MapCtrl', ['$scope', '$compile', '$http', '$q', '$timeout', '$location', function($scope, $compile, $http, $q, $timeout, $location){
+				$scope.Math = window.Math;
+				$scope.timeIndex = 0;
+				$scope.dataSets = [
+					{
+						label: 'Nov. 12-18',
+						dateRange: 'November 12, 2014 - November 18, 2014',
+						file: 'forecast.json',
+					},
+					{
+						label: 'Nov. 18-22',
+						dateRange: 'November 18, 2014 - November 22, 2014',
+						file: 'forecast16.json',
+					},
+					{
+						label: 'Nov. 22-28',
+						dateRange: 'November 22, 2014 - November 28, 2014',
+						file: 'forecast22.json',
+					},
+				];
+			$scope.max = 0;
+			$scope.min = 100;	
+			function createTimeSelector(){
+				var info = L.control({position: "bottomright"});
+				info.onAdd = function (map) {
+					var htmlContent = '<div class="info info-width">'+
+					'<p><h4> Canal Tide Levels (Forecast)</h4></p>'+
+					'<p><h5><span ng-repeat="dataSet in dataSets" ng-if="dataFile==dataSet.file">{{dataSet.dateRange}}</span></h5></p>'+
+					'<p><h6>{{modelTimestep.l}}</h6>'+
+					'<slider floor="0" ceiling="{{modelData.length-1}}" step="1" precision="0" ng-model="timeIndex"></slider></p>'+
+					'<button style="margin-bottom:10px;margin-right:5px;" ng-click="backPlayback()">Back</button>'+
+					'<button style="margin-bottom:10px;margin-right:5px;" ng-click="togglePlayback()">{{playbackTimer?"Pause":"Play"}}</button>'+
+					'<button style="margin-bottom:10px;" ng-click="stepPlayback()">Step</button>'+
+					'<p><span ng-repeat="dataSet in dataSets" style="margin-right:10px;" title="{{dataSet.dateRange}}"><a ng-href="?{{dataSet.file}}" ng-if="dataFile!=dataSet.file">{{dataSet.label}}</a><span ng-if="dataFile==dataSet.file">{{dataSet.label}}</span></span></p>'+
+					'</div>';
+					$scope.compiled = $compile(htmlContent)($scope);
+					this._content = $scope.compiled[0];
+					L.DomEvent.disableClickPropagation(this._content);
+					return this._content;
+				};
+				return info;
+			}
+			
+			function createBrandBox(){
+				var info = L.control({position: "bottomleft"});
+				info.onAdd = function (map) {
+					var htmlContent = '<div class="info" style="width:auto;" "style=height:auto">'+
+							'<span ng-click="showAbout()"><img src="about.png" style="cursor:pointer;padding-right:7px;"></span>'+
+							'<a href="http://veniceprojectcenter.org"><img src="vpc25logo.png"></a>'+
+							'<ul style="margin-top:5px;margin-bottom:0px;">'+
+							'<li><a href="http://canals.veniceprojectcenter.org">Canal Infrastructure</a></li>'+
+							'<li><a href="http://canals.veniceprojectcenter.org/hydro">Canal Hydrodynamics</a></li>'+
+							'<li><a href="http://bridges.veniceprojectcenter.org">Bridge Height</a></li>'+
+							'<li><a href="http://canals.veniceprojectcenter.org/latency">Tide Latency</a></li>'+
+							'</ul>'+
+							'</div>';
+					$scope.compiled = $compile(htmlContent)($scope);
+					this._content = $scope.compiled[0];
+					return this._content;
+				};
+				return info;
+			}
+			
+			function createKey(){
+				var info = L.control({position: "topright"});
+				info.onAdd = function (map) {
+					var htmlContent = '<div class="info">'+
+					'<h4>Water Level (m)</h4>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#000000"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{min | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#4c0000"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{minNumber + (max - min)/10 | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#990000"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{minNumber + ((max - min)/10)*2 | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#ff0000"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{minNumber + ((max - min)/10)*3 | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#996300"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{minNumber + ((max - min)/10)*4 | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#999900"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{minNumber + ((max - min)/10)*5 | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#ffff00"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{minNumber + ((max - min)/10)*6 | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#003300"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{minNumber + ((max - min)/10)*7 | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#009900"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{minNumber + ((max - min)/10)*8 | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#00ff00"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{minNumber + ((max - min)/10)*9 | number:4}}</span></div>'+
+					'<div><span style="width:60px;height:20px;display:inline-block;vertical-align:middle;background-color:#ffffff"></span><span style="display:inline-block;vertical-align:middle;margin-left:20px;">{{max | number:4}}</span></div>'+
+					'</div>';
+					$scope.compiled = $compile(htmlContent)($scope);
+					this._content = $scope.compiled[0];
+					return this._content;
+				};
+				return info;
+			}
+			
+			$scope.color1 = chroma("#FFFFFF"); //black
+			$scope.color2 = chroma("#4c0000"); //dark red
+			$scope.color3 = chroma('#990000'); //red
+			$scope.color4 = chroma('#ff0000'); //pale red
+			$scope.color5 = chroma('#996300'); //orange
+			$scope.color6 = chroma('#999900'); //yellow
+			$scope.color7 = chroma('#ffff00'); //pale yellow
+			$scope.color8 = chroma("#003300"); //dark green
+			$scope.color9 = chroma('#009900'); //medium green
+			$scope.color10 = chroma('#00ff00'); //pale green
+			$scope.color11 = chroma('white'); //white
+			$scope.ColorValues = new Array();
+			$scope.ColorValues.push($scope.color1);
+			$scope.ColorValues.push($scope.color2);
+			$scope.ColorValues.push($scope.color3);
+			$scope.ColorValues.push($scope.color4);
+			$scope.ColorValues.push($scope.color5);
+			$scope.ColorValues.push($scope.color6);
+			$scope.ColorValues.push($scope.color7);
+			$scope.ColorValues.push($scope.color8);
+			$scope.ColorValues.push($scope.color9);
+			$scope.ColorValues.push($scope.color10);
+			$scope.ColorValues.push($scope.color11);
+
+			function updateMarkers(){
+					if($scope.segmentArrows && $scope.modelTimestep && $scope.segmentData && $scope.segmentPolygons){
+						$scope.min = 100;
+						$scope.max = 0;
+						for(var segmentId in $scope.segmentArrows){
+							var arrow = $scope.segmentArrows[segmentId];
+							var data = $scope.segmentData[segmentId];
+							if(arrow && data){
+								var vel = $scope.modelTimestep.v[segmentId-2001];
+								if (vel > $scope.max)
+								{
+									$scope.max = vel;
+								}
+								if (vel < $scope.min)
+								{
+									$scope.min = vel;
+								}
+								$scope.minNumber = parseFloat($scope.min);
+								$scope.maxNumber = parseFloat($scope.max);
+								if(vel!==undefined){
+									arrow.setHeadVisible(false);
+									var segmentPolygon = $scope.segmentPolygons[data.segmentId];
+									if(segmentPolygon){
+										if (vel > $scope.minNumber && vel < $scope.minNumber + (Math.abs($scope.max - $scope.min))/10) {
+										segmentPolygon.setStyle({fillColor: $scope.color1});
+										}
+										else if (vel > $scope.minNumber + (Math.abs($scope.max - $scope.min))/10 
+										&& vel < $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*2){
+											segmentPolygon.setStyle({fillColor: $scope.color2});
+										}
+										else if (vel > $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*2 
+										&& vel < $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*3)
+										{
+											segmentPolygon.setStyle({fillColor: $scope.color3});
+										}
+										else if (vel > $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*3 
+										&& vel < $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*4)
+										{
+											segmentPolygon.setStyle({fillColor: $scope.color4});
+										}
+										else if (vel > $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*4  
+										&& vel < $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*5)
+										{
+											segmentPolygon.setStyle({fillColor: $scope.color5});
+										}
+										else if (vel > $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*5  
+										&& vel < $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*6)
+										{
+											segmentPolygon.setStyle({fillColor: $scope.color6});
+										}
+										else if (vel > $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*6  
+										&& vel < $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*7)
+										{
+											segmentPolygon.setStyle({fillColor: $scope.color7});
+										}
+										else if (vel > $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*7 
+										&& vel < $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*8)
+										{
+											segmentPolygon.setStyle({fillColor: $scope.color8});
+										}
+										else if (vel > $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*8  
+										&& vel < $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*9)
+										{
+											segmentPolygon.setStyle({fillColor: $scope.color9});
+										}
+										else if (vel > $scope.minNumber + ((Math.abs($scope.max - $scope.min))/10)*9
+										&& vel < $scope.max)
+										{
+											segmentPolygon.setStyle({fillColor: $scope.color10});
+										}
+										else if (vel > $scope.max)
+										{
+											segmentPolygon.setStyle({fillColor: $scope.color11});
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			$scope.$watchCollection('segmentArrows', updateMarkers);
+			$scope.$watch('modelTimestep', updateMarkers);
+			$scope.$watchCollection('segmentData', updateMarkers);
+			$scope.$watchCollection('segmentPolygons', updateMarkers);
+			
+			$scope.showAbout = function (){
+				$('#aboutPanel').show();
+			}
+			$scope.hideAbout = function (){
+				$('#aboutPanel').hide();
+			}
+				
+			function updateModelTimestep(){
+					if($scope.modelData && $scope.timeIndex)
+						$scope.modelTimestep = $scope.modelData[$scope.timeIndex];
+				}
+				$scope.$watch('modelData', updateModelTimestep);
+				$scope.$watch('timeIndex', updateModelTimestep);
+				
+				$scope.onTimeout = function(){
+					if($scope.modelData && $scope.timeIndex < $scope.modelData.length-1){
+						$scope.timeIndex++;
+						$scope.playbackTimer = $timeout($scope.onTimeout, 200);
+					}
+					else
+						$scope.playbackTimer = null;
+				}
+				$scope.playbackTimer = $timeout($scope.onTimeout, 2000);
+				$scope.togglePlayback = function(){
+					if($scope.playbackTimer){
+						$timeout.cancel($scope.playbackTimer);
+						$scope.playbackTimer = null;
+					}
+					else{
+						if($scope.timeIndex >= $scope.modelData.length-1)
+							$scope.timeIndex = 0;
+						$scope.playbackTimer = $timeout($scope.onTimeout, 200);
+						//$scope.min = 100;
+						//$scope.max = 0;
+					}
+				};
+				$scope.stepPlayback = function(){
+					if($scope.timeIndex < $scope.modelData.length-1)
+						$scope.timeIndex++;
+				};
+				
+				$scope.backPlayback = function(){
+					if($scope.timeIndex > 0)
+					{
+						$scope.timeIndex--;
+					}
+				};
+				
+			$( document ).ready(function() {
+				createTimeSelector().addTo(map);
+				createBrandBox().addTo(map);
+				createKey().addTo(map);
+				$('#spinner').spin('large', '#fff');
+				$('#aboutPanel').hide();
+				$scope.dataFile = $location.absUrl().split("?")[1];
+				if(!$scope.dataFile)
+					$scope.dataFile = 'forecast.json';
+				$q.all(
+					{
+						segments: $http.get('segments.geojson')
+							.then(function(result){
+								if(result.status==200){
+									var segmentLayer = L.geoJson(result.data, {
+										style: {
+											fillColor: '#FFFFFF', fillOpacity: 1.0, weight: 0, clickable: false
+										}
+									});
+									return segmentLayer;
+								}
+							}),
+						modelSegments: $http.get('modelSegments.json')
+							.then(function(result) {
+								if(result.status == 200){
+									$scope.segmentArrows = {};
+									$scope.segmentData = result.data;
+									var segmentPolygonOptions = {weight: 0, fillColor:'#000000', fillOpacity: 1.0, clickable: false};
+									var segmentLayersGroup = new L.FeatureGroup();
+									for(var segmentId in result.data){
+										var segmentData = result.data[segmentId];
+										var midpoint = segmentData.midpoint;
+										var angle = segmentData.angle;
+										
+										var segmentLayer = new L.ArrowLine(L.latLng(midpoint.y, midpoint.x), angle, 0.0003, segmentPolygonOptions);
+										$scope.segmentArrows[segmentId] = segmentLayer;
+										$scope.segmentArrows[segmentId].setHeadVisible(false);
+										segmentLayersGroup.addLayer(segmentLayer);
+									}
+									return segmentLayersGroup;
+								}
+							}),
+							modelOutput: $http.get($scope.dataFile)
+								.then(function(result) {
+									if(result.status == 200){
+										return $scope.modelData = result.data;
+									}
+								})
+					}
+				).then(function(layers){
+					var validModelSegments = {};
+					var validSegments = {};
+					for (var x in $scope.modelData[0].v){
+						var modelId = x*1+2001;
+						validSegments[$scope.segmentData[modelId].segmentId] = true;
+						validModelSegments[modelId] = true;
+					}
+					
+					$scope.segmentPolygons = {};
+					for (var layerId in layers.segments._layers){
+						var layer = layers.segments._layers[layerId];
+						var segmentId = layer.feature.properties.Codice;
+						if(validSegments[segmentId])
+							$scope.segmentPolygons[segmentId] = layer;
+						else
+							layers.segments.removeLayer(layer);
+					}
+					for(var segmentId in $scope.segmentArrows){
+						var arrow = $scope.segmentArrows[segmentId];
+						if(!validModelSegments[segmentId])
+							layers.modelSegments.removeLayer(arrow);
+					}
+					
+					layers.segments.addTo(map);
+					//layers.modelSegments.addTo(map);
+					$('#loadingPanel').hide();
+					$('#spinner').spin(false);
+				});
+				
+			});
+			}]);
+			</script>
+
+	</head>
+	<body ng-controller="MapCtrl">
+		<div style="position:absolute;width:100%;height:100%;">
+			<div id="map-canvas" style="width:100%;height:100%;"></div>
+		</div>
+	
+		<div style="position:absolute;top:0px;left:0px;width:100%;height:100%;z-index:2000;background-color:rgba(0,0,0,0.5);" id="loadingPanel">
+			<div style="margin-left:auto;margin-right:auto;text-align:center;margin-top:50px;" id="loadingText"><h3 style="color:white;">Loading...</h3></div>
+			<div style="position:absolute;left:50%;top:50%;" id="spinner"></div>
+		</div>
+		
+		<div ng-click="hideAbout()" style="position:absolute;top:0px;left:0px;width:100%;height:100%;z-index:2000;background-color:rgba(0,0,0,0.5);" id="aboutPanel">
+			<iframe class="info" style="position: absolute;top: 50%;left: 50%;margin-top: -350px;margin-left: -450px;height: 700px;width:900px;overflow:auto;padding:5px" id="about" src="https://docs.google.com/document/d/1NPOReFlzVPuOaXPigGUcobSWD2XT8UbkQBya05M-BGA/pub?embedded=true">
+			</iframe>
+		</div>
+		
+	</body>
+</html>

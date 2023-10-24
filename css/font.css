@@ -1,0 +1,115 @@
+@font-face {
+	font-family: 'icomoon';
+	src:url('../fonts/icomoon.eot');
+	src:url('../fonts/icomoon.eot?#iefix') format('embedded-opentype'),
+		url('../fonts/icomoon/icomoon.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+.icon-eye, .icon-eye-closed, .icon-search,
+.icon-unlocked, .icon-lock, .icon-link,
+.icon-download, .icon-user, .icon-compass,
+.icon-stack, .icon-cog, .icon-lamp, .icon-museum,
+.icon-camera, .icon-arrow-right, .icon-arrow-left,
+.icon-wikipedia, .icon-heart-empty, .icon-heart-full,
+.icon-crosshair-empty, .icon-crosshair-full,
+.icon-x, .icon-question, .icon-flag, .icon-sad,
+.icon-document, .icon-arrow-down, .icon-warning, .icon-attachment {
+	font-family: 'icomoon' !important;
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+}
+.icon-eye:before {
+	position: relative;
+	top: -5px;
+	content: "\e000";
+}
+.icon-eye-closed:before {
+	position: relative;
+	top: -5px;
+	content: "\e001";
+}
+.icon-search:before {
+	content: "\e002";
+}
+.icon-unlocked:before {
+	content: "\e003";
+}
+.icon-lock:before {
+	content: "\e004";
+}
+.icon-link:before {
+	content: "\e005";
+}
+.icon-download:before {
+	content: "\e006";
+}
+.icon-user:before {
+	content: "\e007";
+}
+.icon-compass:before {
+	content: "\e008";
+}
+.icon-stack:before {
+	content: "\e009";
+}
+.icon-crosshair-empty:before {
+	content: "\e00a";
+}
+.icon-cog:before {
+	content: "\e00b";
+}
+.icon-arrow-left:before {
+	content: "\e00c";
+}
+.icon-sad:before {
+	content: "\e00d";
+}
+.icon-camera:before {
+	content: "\e00e";
+}
+.icon-wikipedia:before {
+	content: "\e00f";
+}
+.icon-arrow-right:before {
+	content: "\e010";
+}
+.icon-heart-full:before {
+	content: "\e011";
+}
+.icon-heart-empty:before {
+	content: "\e012";
+}
+.icon-crosshair-full:before {
+	content: "\e013";
+}
+.icon-x:before {
+	content: "\e014";
+}
+.icon-question:before {
+	content: "\e015";
+}
+.icon-flag:before {
+	content: "\e016";
+}
+.icon-document:before {
+	content: "\e017";
+}
+.icon-arrow-down:before {
+	content: "\e018";
+}
+.icon-attachment:before {
+	content: "\e019";
+}
+.icon-lamp:before {
+	content: "\e01a";
+}
+.icon-warning:before {
+	content: "\e01b";
+}
+.icon-museum:before {
+	content: "\e01c";
+}
